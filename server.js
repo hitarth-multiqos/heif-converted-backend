@@ -4,8 +4,12 @@ const path = require('path');
 const fs = require('fs');
 const { exec } = require('child_process');
 const archiver = require('archiver');
+const cors = require('cors');
 
 const app = express();
+
+app.use(cors({ origin: '*' }))
+
 const upload = multer({
   storage: multer.diskStorage({
     destination: 'public/uploads',
@@ -24,7 +28,7 @@ app.use('/public/uploads', express.static(path.join(publicDirectoryPath, 'upload
 
 // Example route to test serving a file
 app.get('/', (req, res) => {
-  res.send('Static files are being served correctly!');
+  res.status(200).send('Health check Ok!');
 });
 
 // Endpoint to handle image uploads
@@ -37,7 +41,7 @@ app.post('/convert', upload.array('images', 100), async (req, res) => {
 
     let zipName = 'converted_images' + Date.now() + '.zip'
     const convertedFiles = [];
-    const outputZipPath = path.join(__dirname, 'public', zipName);
+    const outputZipPath = path.join(__dirname, 'public/uploads/', zipName);
 
     // Convert all uploaded images
     for (const file of req.files) {
@@ -86,7 +90,8 @@ app.post('/convert', upload.array('images', 100), async (req, res) => {
 
       res.json({
         message: 'Images converted and zipped successfully.',
-        downloadUrl: '/' + zipName
+        // downloadUrl: 'http://localhost:3000/public/uploads/' + zipName
+        downloadUrl: 'https://fefd-2401-4900-8898-4912-395b-13dc-a7f8-caa1.ngrok-free.app/public/uploads/' + zipName
       });
     });
 
