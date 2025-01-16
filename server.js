@@ -9,6 +9,7 @@ const cors = require('cors');
 const app = express();
 
 app.use(cors({ origin: '*' }))
+require('./cron')
 
 const upload = multer({
   storage: multer.diskStorage({
@@ -39,7 +40,7 @@ app.post('/convert', upload.array('images', 100), async (req, res) => {
       return res.status(400).json({ error: 'No files uploaded' });
     }
 
-    let zipName = 'converted_images' + Date.now() + '.zip'
+    let zipName = 'converted_images-' + Date.now() + '.zip'
     const convertedFiles = [];
     const outputZipPath = path.join(__dirname, 'public/uploads/', zipName);
 
@@ -81,11 +82,17 @@ app.post('/convert', upload.array('images', 100), async (req, res) => {
 
       // Clean up uploaded files
       req.files.forEach(file => {
-        fs.unlinkSync(path.join(__dirname, 'public/uploads', file.filename)); // Delete original file
+        if (fs.existsSync(path.join(__dirname, 'public/uploads', file.filename)))
+          fs.unlinkSync(path.join(__dirname, 'public/uploads', file.filename)); // Delete original file
+        else
+          console.log('File not found on this path', path.join(__dirname, 'public/uploads', file.filename))
       });
 
       convertedFiles.forEach(file => {
-        fs.unlinkSync(file); // Delete converted file
+        if (fs.existsSync(file))
+          fs.unlinkSync(file); // Delete converted file
+        else
+          console.log('File not found', file)
       });
 
       res.json({
